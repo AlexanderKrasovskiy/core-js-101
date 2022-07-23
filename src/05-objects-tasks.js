@@ -6,7 +6,6 @@
  *                                                                                                *
  ************************************************************************************************ */
 
-
 /**
  * Returns the rectangle object with width and height parameters and getArea() method
  *
@@ -20,10 +19,23 @@
  *    console.log(r.height);      // => 20
  *    console.log(r.getArea());   // => 200
  */
-function Rectangle(/* width, height */) {
-  throw new Error('Not implemented');
-}
+// class Rectangle {
+//   constructor(width, height) {
+//     this.width = width;
+//     this.height = height;
+//   }
 
+//   getArea() {
+//     return this.width * this.height;
+//   }
+// }
+function Rectangle(width, height) {
+  this.width = width;
+  this.height = height;
+}
+Rectangle.prototype.getArea = function getArea() {
+  return this.width * this.height;
+};
 
 /**
  * Returns the JSON representation of specified object
@@ -35,10 +47,9 @@ function Rectangle(/* width, height */) {
  *    [1,2,3]   =>  '[1,2,3]'
  *    { width: 10, height : 20 } => '{"height":10,"width":20}'
  */
-function getJSON(/* obj */) {
-  throw new Error('Not implemented');
+function getJSON(obj) {
+  return JSON.stringify(obj);
 }
-
 
 /**
  * Returns the object of specified type from JSON representation
@@ -51,10 +62,11 @@ function getJSON(/* obj */) {
  *    const r = fromJSON(Circle.prototype, '{"radius":10}');
  *
  */
-function fromJSON(/* proto, json */) {
-  throw new Error('Not implemented');
+function fromJSON(proto, json) {
+  const parsedObj = JSON.parse(json);
+  Object.setPrototypeOf(parsedObj, proto);
+  return parsedObj;
 }
-
 
 /**
  * Css selectors builder
@@ -110,33 +122,172 @@ function fromJSON(/* proto, json */) {
  *  For more examples see unit tests.
  */
 
+class Builder {
+  constructor() {
+    this.state = {
+      element: '',
+      id: '',
+      classes: [],
+      attributes: [],
+      pseudoClasses: [],
+      pseudoElement: '',
+      lastAddedItemIdx: null,
+    };
+  }
+
+  // ERR:
+  // Selector parts should be arranged in the following order:
+  // element, id, class, attribute, pseudo-class, pseudo-element
+  // 1        2   3      4          5             6 - Last Added El Order ?
+
+  element(value) {
+    const { element, lastAddedItemIdx } = this.state;
+    if (element) {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector',
+      );
+    }
+    if (lastAddedItemIdx) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element',
+      );
+    }
+
+    this.state.element = value;
+    this.state.lastAddedItemIdx = 1;
+
+    return this;
+  }
+
+  id(value) {
+    const { id, lastAddedItemIdx } = this.state;
+    if (id) {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector',
+      );
+    }
+    if (lastAddedItemIdx && lastAddedItemIdx > 2) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element',
+      );
+    }
+
+    this.state.id = `#${value}`;
+    this.state.lastAddedItemIdx = 2;
+
+    return this;
+  }
+
+  class(value) {
+    const { lastAddedItemIdx } = this.state;
+    if (lastAddedItemIdx && lastAddedItemIdx > 3) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element',
+      );
+    }
+
+    this.state.classes.push(`.${value}`);
+    this.state.lastAddedItemIdx = 3;
+
+    return this;
+  }
+
+  attr(value) {
+    const { lastAddedItemIdx } = this.state;
+    if (lastAddedItemIdx && lastAddedItemIdx > 4) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element',
+      );
+    }
+
+    this.state.attributes.push(`[${value}]`);
+    this.state.lastAddedItemIdx = 4;
+
+    return this;
+  }
+
+  pseudoClass(value) {
+    const { lastAddedItemIdx } = this.state;
+    if (lastAddedItemIdx && lastAddedItemIdx > 5) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element',
+      );
+    }
+
+    this.state.pseudoClasses.push(`:${value}`);
+    this.state.lastAddedItemIdx = 5;
+
+    return this;
+  }
+
+  pseudoElement(value) {
+    const { pseudoElement } = this.state;
+    if (pseudoElement) {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector',
+      );
+    }
+
+    this.state.pseudoElement = `::${value}`;
+    this.state.lastAddedItemIdx = 6;
+
+    return this;
+  }
+
+  stringify() {
+    const { element, id, pseudoElement } = this.state;
+    let { classes, attributes, pseudoClasses } = this.state;
+    classes = classes.join('');
+    attributes = attributes.join('');
+    pseudoClasses = pseudoClasses.join('');
+
+    return `${element}${id}${classes}${attributes}${pseudoClasses}${pseudoElement}`;
+  }
+}
+
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+
+  element(value) {
+    const builder = new Builder();
+    builder.element(value);
+    return builder;
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    const builder = new Builder();
+    builder.id(value);
+    return builder;
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    const builder = new Builder();
+    builder.class(value);
+    return builder;
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    const builder = new Builder();
+    builder.attr(value);
+    return builder;
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    const builder = new Builder();
+    builder.pseudoClass(value);
+    return builder;
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    const builder = new Builder();
+    builder.pseudoElement(value);
+    return builder;
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    return {
+      string: `${selector1.stringify()} ${combinator} ${selector2.stringify()}`,
+      stringify() { return this.string; },
+    };
   },
 };
 

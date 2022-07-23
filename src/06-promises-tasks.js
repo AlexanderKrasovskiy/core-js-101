@@ -28,8 +28,19 @@
  *      .catch((error) => console.log(error.message)) // 'Error: Wrong parameter is passed!
  *                                                    //  Ask her again.';
  */
-function willYouMarryMe(/* isPositiveAnswer */) {
-  throw new Error('Not implemented');
+function willYouMarryMe(isPositiveAnswer) {
+  // return new Promise((res, rej) => {
+  //   if (isPositiveAnswer === undefined) {
+  //     rej(Error('Wrong parameter is passed! Ask her again.'));
+  //   } else if (isPositiveAnswer) {
+  //     res('Hooray!!! She said "Yes"!');
+  //   } else {
+  //     res('Oh no, she said "No".');
+  //   }
+  // });
+  if (isPositiveAnswer === undefined) return Promise.reject(Error('Wrong parameter is passed! Ask her again.'));
+  if (isPositiveAnswer) return Promise.resolve('Hooray!!! She said "Yes"!');
+  return Promise.resolve('Oh no, she said "No".');
 }
 
 
@@ -48,8 +59,19 @@ function willYouMarryMe(/* isPositiveAnswer */) {
  *    })
  *
  */
-function processAllPromises(/* array */) {
-  throw new Error('Not implemented');
+async function processAllPromises(array) {
+  // const result = [];
+
+  // // array.map((el) => el.then((val) => result.push(val)));
+  // array.map(async (el) => {
+  //   const resolved = await el;
+  //   result.push(resolved);
+  // });
+
+  // return Promise.resolve(result);
+  const arrOfObjectResults = await Promise.allSettled(array);
+  const resultArr = arrOfObjectResults.filter((obj) => obj.status === 'fulfilled').map((el) => el.value);
+  return Promise.resolve(resultArr);
 }
 
 /**
@@ -71,8 +93,9 @@ function processAllPromises(/* array */) {
  *    })
  *
  */
-function getFastestPromise(/* array */) {
-  throw new Error('Not implemented');
+async function getFastestPromise(array) {
+  const resultValue = await Promise.race(array);
+  return Promise.resolve([resultValue]);
 }
 
 /**
@@ -92,8 +115,19 @@ function getFastestPromise(/* array */) {
  *    });
  *
  */
-function chainPromises(/* array, action */) {
-  throw new Error('Not implemented');
+async function chainPromises(array, action) {
+  const resultsArr = [];
+  await array.map(async (prom) => {
+    try {
+      resultsArr.push(await prom);
+    } catch (e) {
+      // e
+    }
+  });
+
+  const result = resultsArr.reduce(action);
+
+  return Promise.resolve(result);
 }
 
 module.exports = {
