@@ -80,11 +80,13 @@ function isLeapYear(date) {
 function timeSpanToString(startDate, endDate) {
   const diff = endDate - startDate;
   const diffDate = new Date(diff);
-  diffDate.setUTCHours(diffDate.getUTCHours() - 5);
+  const offset = -diffDate.getTimezoneOffset() / 60;
+  diffDate.setUTCHours(diffDate.getUTCHours() - offset);
   const hMS = diffDate.toTimeString().split(' ')[0];
   let ms = String(diffDate.getMilliseconds());
   if (ms.length === 2) ms = `0${ms}`;
   if (ms.length === 1) ms = `00${ms}`;
+
 
   return `${hMS}.${ms}`;
 }
